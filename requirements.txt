@@ -1,0 +1,12 @@
+python-dotenv
+confluent-kafka
+fastapi
+starlette
+pydantic
+cassandra-driver
+pymongo
+neo4j
+redis
+pysolr
+kafka-python
+python-jose
