@@ -1,11 +1,16 @@
 import os
+import configuration
 import asyncio
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from routers.v1 import student_router, user_router, course_router
 from middleware import AuthorizationMiddleware, LoggingMiddleware
+from containers import AppContainer
 from main_consumers import initialize_consumers  # Import consumer initialization
 
+container = AppContainer()
+
+kafka_repository = container.message_broker_container.kafka_repository
 
 # Retrieve settings from environment variables
 APP_TITLE = os.getenv("APP_TITLE", "College Management System")
@@ -16,7 +21,7 @@ APP_VERSION = os.getenv("APP_VERSION", "1.0.0")
 app = FastAPI(title=APP_TITLE, description=APP_DESCRIPTION, version=APP_VERSION)
 
 # Add middleware
-app.add_middleware(LoggingMiddleware)
+app.add_middleware(LoggingMiddleware, message_broker_repository=kafka_repository)
 app.add_middleware(AuthorizationMiddleware)
 
 # Include routers

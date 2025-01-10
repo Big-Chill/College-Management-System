@@ -1,9 +1,9 @@
 from fastapi import FastAPI, HTTPException, APIRouter, Request
 from services.student_service import StudentService
-from configuration import CASANDRA_KEYSPACE, CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL
+from configuration import CASSANDRA_KEYSPACE, CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL
 from repositories import CassandraRepository, RedisRepository, SolrRepository
 
-db_repository = CassandraRepository(contact_points=[CASSANDRA_HOST], keyspace=CASANDRA_KEYSPACE)
+db_repository = CassandraRepository(contact_points=[CASSANDRA_HOST], keyspace=CASSANDRA_KEYSPACE)
 cache_repository = RedisRepository(host=REDIS_HOST, port=REDIS_PORT, db=0)
 search_repository = SolrRepository(solr_url=SOLR_URL)
 student_service = StudentService(db_repository=db_repository, cache_repository=cache_repository, search_repository=search_repository)

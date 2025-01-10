@@ -10,3 +10,4 @@ redis
 pysolr
 kafka-python
 python-jose
+dependency-injector

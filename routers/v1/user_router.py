@@ -3,10 +3,10 @@ from pprint import pprint
 from fastapi import FastAPI, HTTPException, Depends, APIRouter, Response, Cookie, Request
 from fastapi.responses import JSONResponse
 from services.user_service import UserService
-from configuration import CASANDRA_KEYSPACE, CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL
+from configuration import CASSANDRA_KEYSPACE, CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL
 from repositories import CassandraRepository, RedisRepository, SolrRepository
 
-db_repository = CassandraRepository(contact_points=[CASSANDRA_HOST], keyspace=CASANDRA_KEYSPACE)
+db_repository = CassandraRepository(contact_points=[CASSANDRA_HOST], keyspace=CASSANDRA_KEYSPACE)
 cache_repository = RedisRepository(host=REDIS_HOST, port=REDIS_PORT, db=0)
 search_repository = SolrRepository(solr_url=SOLR_URL)
 user_service = UserService(db_repository=db_repository, cache_repository=cache_repository, search_repository=search_repository)

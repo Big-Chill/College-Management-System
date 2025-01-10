@@ -1,10 +1,10 @@
 from fastapi import FastAPI, HTTPException, APIRouter, Request
 from services.course_service import CourseService
-from configuration import CASANDRA_KEYSPACE, CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL, KAFKA_HOST
+from configuration import CASSANDRA_KEYSPACE, CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL, KAFKA_HOST
 from repositories import CassandraRepository, RedisRepository, KafkaRepository
 
 
-db_repository = CassandraRepository(contact_points=[CASSANDRA_HOST], keyspace=CASANDRA_KEYSPACE)
+db_repository = CassandraRepository(contact_points=[CASSANDRA_HOST], keyspace=CASSANDRA_KEYSPACE)
 cache_repository = RedisRepository(host=REDIS_HOST, port=REDIS_PORT, db=0)
 course_service = CourseService(db_repository=db_repository, cache_repository=cache_repository, message_broker_repository=KafkaRepository(bootstrap_servers=KAFKA_HOST))
 
