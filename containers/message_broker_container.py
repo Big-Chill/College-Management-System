@@ -1,4 +1,3 @@
-# from configuration import KAFKA_HOST, KAFKA_AUTO_OFFSET_RESET, KAFKA_GROUP_ID
 from dependency_injector import containers, providers
 from repositories import KafkaRepository
 from kafka import KafkaConsumer, KafkaProducer

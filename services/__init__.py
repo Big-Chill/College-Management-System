@@ -1,7 +1,4 @@
-# # app/repositories/__init__.py
-# from abc import ABC, abstractmethod
-
-# class IService(ABC):
-#     @abstractmethod
-#     def validate_data(self, data: dict, in_loop: bool = False) -> dict:
-#         pass
+from .base_service import IService
+from .course_service import CourseService
+from .student_service import StudentService
+from .user_service import UserService
