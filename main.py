@@ -42,4 +42,4 @@ async def shutdown_event():
     # Clean up consumer threads if necessary
     for thread in consumer_threads:
         if thread.is_alive():
-            logger.info(f"Stopping thread: {thread.name}")
+            print(f"Stopping thread: {thread.name}")
