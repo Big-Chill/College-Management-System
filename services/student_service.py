@@ -71,11 +71,17 @@ class StudentService(IService):
 
     def index_student_in_solr(self, student: dict):
         try:
-            student_model = StudentModel(**student)
-            self.search_repository.insert(table="students", data=student_model.dict())
+            message = {
+                "event": "STUDENT_INDEXED",
+                "data": {
+                    "table": "students",
+                    "data": student,
+                }
+            }
+            self.message_broker_repository.publish(topic="student_events", message=message)
+            return {"success": "Student indexed in Solr", "statusCode": 201}
         except Exception as e:
             return {"error": f"Error indexing student in Solr: {str(e)}", "statusCode": 500}
-        return {"success": student_model.dict(), "statusCode": 201}
 
     def create_student(self, student: dict):
         try:

@@ -4,7 +4,7 @@ from confluent_kafka import Consumer
 from typing import Optional
 import logging
 
-from repositories import Neo4jRepository, RedisRepository, MongoRepository, CassandraRepository
+from repositories import Neo4jRepository, RedisRepository, MongoRepository, CassandraRepository, SolrRepository
 from .base_consumer import IBaseConsumer
 from models import StudentModel, UserModel, UserByUserNameModel
 
@@ -18,7 +18,8 @@ class StudentConsumer(IBaseConsumer):
         neo4j_repository: Optional[Neo4jRepository] = None,
         redis_repository: Optional[RedisRepository] = None,
         mongo_repository: Optional[MongoRepository] = None,
-        cassandra_repository: Optional[CassandraRepository] = None
+        cassandra_repository: Optional[CassandraRepository] = None,
+        solr_repository: Optional[SolrRepository] = None
     ):
         self.consumer = consumer
         self.topic_name = topic_name
@@ -26,6 +27,7 @@ class StudentConsumer(IBaseConsumer):
         self.redis_repository = redis_repository
         self.mongo_repository = mongo_repository
         self.cassandra_repository = cassandra_repository
+        self.solr_repository = solr_repository
         logger.info('Kafka Initialized')
 
 
@@ -52,11 +54,22 @@ class StudentConsumer(IBaseConsumer):
                     self.insert_into_cache(message_data["data"])
                 elif message_data.get("event") == "STUDENT_SIGNED_UP":
                     self.sign_up_student(message_data["data"])
+                elif message_data.get("event") == "STUDENT_INDEXED":
+                    self.insert_into_solr(message_data["data"])
 
         except Exception as e:
             print(f"Error consuming message: {str(e)}")
         finally:
             self.close()
+
+    def insert_into_solr(self, event_data):
+        try:
+            table = event_data.get("table")
+            data = event_data.get("data")
+            student_model = StudentModel(**data)
+            self.solr_repository.insert(table=table, data=student_model.dict())
+        except Exception as e:
+            print(f"Error indexing student in Solr: {str(e)}")
 
     def insert_into_cache(self, event_data):
         try:
