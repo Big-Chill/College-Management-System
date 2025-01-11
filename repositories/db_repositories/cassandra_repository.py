@@ -5,7 +5,9 @@ from cassandra.policies import DCAwareRoundRobinPolicy
 from .base_repository import IDBRepository
 
 class CassandraRepository(IDBRepository):
-    def __init__(self, contact_points: list, keyspace: str):
+    def __init__(self, contact_points: list | str, keyspace: str):
+        if isinstance(contact_points, str):
+            contact_points = [contact_points]
         self.cluster = Cluster(contact_points, load_balancing_policy=DCAwareRoundRobinPolicy(local_dc='datacenter1'), protocol_version=5)
         self.session = self.cluster.connect(keyspace)
         self.keyspace = keyspace

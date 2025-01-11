@@ -1,9 +1,8 @@
 from fastapi import FastAPI, HTTPException, APIRouter, Request, Depends
 from services.student_service import StudentService
-from containers import AppContainer
 from dependencies import get_student_service
 
-app_container = AppContainer()
+
 student_router = APIRouter()
 
 @student_router.post("/create_student")

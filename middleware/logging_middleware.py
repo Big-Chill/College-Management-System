@@ -1,17 +1,13 @@
 import json
-from pprint import pprint
-from fastapi import Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime
-from repositories import MongoRepository
-from configuration import MONGO_DB, MONGO_HOST, KAFKA_HOST
-from repositories import IMessageBrokerRepository
+from dependencies import get_kafka_repository
 
 class LoggingMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, message_broker_repository: IMessageBrokerRepository):
+    def __init__(self, app):
         super().__init__(app)
-        self.message_broker_repository = message_broker_repository
+        self.message_broker_repository = get_kafka_repository()
 
     async def dispatch(self, request: Request, call_next):
         body = await request.body()
@@ -33,9 +29,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             "data": log_data
         }
 
-        message_broker = self.message_broker_repository()
-
-        message_broker.publish(topic="api_events", message=message)
+        self.message_broker_repository.publish(topic="api_events", message=message)
 
         async def receive():
             return {"type": "http.request", "body": body}
