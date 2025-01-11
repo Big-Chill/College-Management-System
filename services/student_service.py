@@ -40,35 +40,20 @@ class StudentService(IService):
         return data
 
     def sign_up_student(self, student: dict):
-        try:
-            student_model = StudentModel(**student)
-            user_payload = {
-                "user_name": student_model.roll_no,
-                "password": student_model.roll_no,
-                "email": student_model.email,
-                "reference_id": student_model.id
-            }
-            user_model = UserModel(**user_payload)
-            self.db_repository.insert(table="users", data=user_model.dict())
-            self.db_repository.insert(table="users_by_username", data=UserByUserNameModel(user_name=user_model.user_name, user_id=user_model.id, reference_id=user_model.reference_id, password=user_model.password).dict())
-            return {"success": user_model.dict(), "statusCode": 201}
-        except Exception as e:
-            pprint(f'Error signing up student: {str(e)}')
-            return {"error": "Error signing up student in the system", "statusCode": 500}
+        message = {
+            "event": "STUDENT_SIGNED_UP",
+            "data": student
+        }
+        self.message_broker_repository.publish(topic="student_events", message=message)
 
     def bulk_sign_up_students(self, students: List[Dict[str, Union[str, int]]]):
         try:
             for student in students:
-                student_model = StudentModel(**student)
-                user_payload = {
-                    "user_name": student_model.roll_no,
-                    "password": student_model.roll_no,
-                    "email": student_model.email,
-                    "reference_id": student_model.id
+                message = {
+                    "event": "STUDENT_SIGNED_UP",
+                    "data": student
                 }
-                user_model = UserModel(**user_payload)
-                self.db_repository.insert(table="users", data=user_model.dict())
-                self.db_repository.insert(table="users_by_username", data=UserByUserNameModel(user_name=user_model.user_name, user_id=user_model.id, reference_id=user_model.reference_id, password=user_model.password).dict())
+                self.message_broker_repository.publish(topic="student_events", message=message)
             return {"success": "Students signed up successfully", "statusCode": 201}
         except Exception as e:
             return {"error": "Error signing up students in the system", "statusCode": 500}

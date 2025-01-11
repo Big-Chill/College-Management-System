@@ -4,9 +4,9 @@ from confluent_kafka import Consumer
 from typing import Optional
 import logging
 
-from repositories import Neo4jRepository, RedisRepository, MongoRepository
+from repositories import Neo4jRepository, RedisRepository, MongoRepository, CassandraRepository
 from .base_consumer import IBaseConsumer
-from models import StudentModel, StudentByEmailModel, StudentByRollNoModel, StudentByPhoneNoModel, StudentByCourseModel, StudentByNameModel, StudentByUserModel
+from models import StudentModel, UserModel, UserByUserNameModel
 
 logger = logging.getLogger(__name__)
 
@@ -17,13 +17,15 @@ class StudentConsumer(IBaseConsumer):
         topic_name: str,
         neo4j_repository: Optional[Neo4jRepository] = None,
         redis_repository: Optional[RedisRepository] = None,
-        mongo_repository: Optional[MongoRepository] = None
+        mongo_repository: Optional[MongoRepository] = None,
+        cassandra_repository: Optional[CassandraRepository] = None
     ):
         self.consumer = consumer
         self.topic_name = topic_name
         self.neo4j_repository = neo4j_repository
         self.redis_repository = redis_repository
         self.mongo_repository = mongo_repository
+        self.cassandra_repository = cassandra_repository
         logger.info('Kafka Initialized')
 
 
@@ -48,6 +50,8 @@ class StudentConsumer(IBaseConsumer):
 
                 if message_data.get("event") == "STUDENT_CREATED":
                     self.insert_into_cache(message_data["data"])
+                elif message_data.get("event") == "STUDENT_SIGNED_UP":
+                    self.sign_up_student(message_data["data"])
 
         except Exception as e:
             print(f"Error consuming message: {str(e)}")
@@ -69,7 +73,20 @@ class StudentConsumer(IBaseConsumer):
         except Exception as e:
             print(f"Error inserting student into cache: {str(e)}")
 
-
+    def sign_up_student(self, student: dict):
+        try:
+            student_model = StudentModel(**student)
+            user_payload = {
+                "user_name": student_model.roll_no,
+                "password": student_model.roll_no,
+                "email": student_model.email,
+                "reference_id": student_model.id
+            }
+            user_model = UserModel(**user_payload)
+            self.cassandra_repository.insert(table="users", data=user_model.dict())
+            self.cassandra_repository.insert(table="users_by_username", data=UserByUserNameModel(user_name=user_model.user_name, user_id=user_model.id, reference_id=user_model.reference_id, password=user_model.password).dict())
+        except Exception as e:
+            print(f"Error signing up student: {str(e)}")
     def close(self):
         """Close the Kafka consumer."""
         self.consumer.close()

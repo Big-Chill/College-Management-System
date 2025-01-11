@@ -4,7 +4,7 @@ from confluent_kafka import Consumer
 from typing import Optional
 import logging
 
-from repositories import Neo4jRepository, RedisRepository, MongoRepository
+from repositories import Neo4jRepository, RedisRepository, MongoRepository, CassandraRepository
 from .base_consumer import IBaseConsumer
 from models import CourseModel, CourseDurationLookupModel, CourseByName, CourseByCredits
 
@@ -17,13 +17,15 @@ class CourseConsumer(IBaseConsumer):
         topic_name: str,
         neo4j_repository: Optional[Neo4jRepository] = None,
         redis_repository: Optional[RedisRepository] = None,
-        mongo_repository: Optional[MongoRepository] = None
+        mongo_repository: Optional[MongoRepository] = None,
+        cassandra_repository: Optional[CassandraRepository] = None
     ):
         self.consumer = consumer
         self.topic_name = topic_name
         self.neo4j_repository = neo4j_repository
         self.redis_repository = redis_repository
         self.mongo_repository = mongo_repository
+        self.cassandra_repository = cassandra_repository
         logger.info('Kafka Initialized')
 
     def consume(self):
