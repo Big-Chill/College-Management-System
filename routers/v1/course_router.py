@@ -1,10 +1,7 @@
 from fastapi import FastAPI, HTTPException, APIRouter, Request, Depends
-
 from dependencies import get_course_service
 from services.course_service import CourseService
-from containers import AppContainer
 
-app_container = AppContainer()
 course_router = APIRouter()
 
 @course_router.post("/create_course")

@@ -6,10 +6,11 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 from utlities import Jwt
 from configuration import INTERNAL_TOKEN
 from repositories import IDBRepository
+from dependencies import get_cassandra_repository
 class AuthorizationMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, db_repository: IDBRepository):
+    def __init__(self, app):
         super().__init__(app)
-        self.db_repository = db_repository
+        self.db_repository: IDBRepository = get_cassandra_repository()
 
     async def dispatch(self, request: Request, call_next):
         TOKEN_MSG = "Missing Authorization Token! Unauthorized to access this resource"
