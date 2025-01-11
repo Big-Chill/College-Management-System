@@ -1,5 +1,5 @@
 from containers import AppContainer
-from services import CourseService, StudentService
+from services import CourseService, StudentService, UserService
 
 app_container = AppContainer()
 
@@ -8,3 +8,6 @@ def get_course_service() -> CourseService:
 
 def get_student_service() -> StudentService:
     return app_container.service_container.student_service()
+
+def get_user_service() -> UserService:
+    return app_container.service_container.user_service()
