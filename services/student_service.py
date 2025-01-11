@@ -1,12 +1,11 @@
 import os, sys, re
-import hashlib
 from typing import List, Dict, Union
 from pprint import pprint
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from .base_service import IService
 from repositories import IDBRepository, CassandraRepository, RedisRepository, SolrRepository, KafkaRepository
 from models import StudentModel, StudentByEmailModel, StudentByRollNoModel, StudentByPhoneNoModel, StudentByCourseModel, StudentByNameModel, UserModel, UserByUserNameModel
-from configuration import CASSANDRA_KEYSPACE, CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL
+from configuration import CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL
 
 
 class StudentService(IService):

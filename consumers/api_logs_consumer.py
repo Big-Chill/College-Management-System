@@ -1,5 +1,4 @@
 import json
-from pprint import pprint
 from confluent_kafka import Consumer
 from typing import Optional
 import logging

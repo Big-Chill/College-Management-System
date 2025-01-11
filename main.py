@@ -1,12 +1,9 @@
 import os
-import configuration
-import asyncio
 from fastapi import FastAPI
-from dotenv import load_dotenv
 from routers.v1 import student_router, user_router, course_router
 from middleware import AuthorizationMiddleware, LoggingMiddleware
 from containers import AppContainer
-from main_consumers import initialize_consumers  # Import consumer initialization
+from main_consumers import initialize_consumers
 
 container = AppContainer()
 

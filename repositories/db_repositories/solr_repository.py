@@ -1,7 +1,4 @@
-import os, sys
 import pysolr
-
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from .base_repository import IDBRepository
 
 

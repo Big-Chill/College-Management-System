@@ -1,8 +1,4 @@
-import os, sys
-import uuid
 import redis
-
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from .base_repository import IDBRepository
 
 class RedisRepository(IDBRepository):

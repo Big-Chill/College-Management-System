@@ -1,5 +1,3 @@
-import os, sys
-from pprint import pprint
 from fastapi import FastAPI, HTTPException, Depends, APIRouter, Response, Cookie, Request
 from fastapi.responses import JSONResponse
 from services.user_service import UserService

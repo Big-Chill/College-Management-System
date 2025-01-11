@@ -2,8 +2,6 @@ import os, sys
 import cassandra
 from cassandra.cluster import Cluster
 from cassandra.policies import DCAwareRoundRobinPolicy
-
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from .base_repository import IDBRepository
 
 class CassandraRepository(IDBRepository):

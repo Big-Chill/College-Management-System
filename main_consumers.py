@@ -1,4 +1,3 @@
-import os
 import threading
 import logging
 from confluent_kafka import Consumer

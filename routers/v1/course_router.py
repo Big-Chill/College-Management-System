@@ -1,7 +1,5 @@
 from fastapi import FastAPI, HTTPException, APIRouter, Request, Depends
 from services.course_service import CourseService
-from configuration import CASSANDRA_KEYSPACE, CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL, KAFKA_HOST
-from repositories import CassandraRepository, RedisRepository, KafkaRepository
 from containers import AppContainer
 
 app_container = AppContainer()

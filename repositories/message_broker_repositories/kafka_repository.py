@@ -1,4 +1,3 @@
-from pprint import pprint
 from repositories.message_broker_repositories import IMessageBrokerRepository
 from kafka import KafkaProducer, KafkaConsumer
 import json
