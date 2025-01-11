@@ -1,8 +1,7 @@
 from repositories import CassandraRepository
 from configuration import CASSANDRA_HOST, CASSANDRA_KEYSPACE
+from containers import app_container
 
-def get_db_repository() -> CassandraRepository:
-    return CassandraRepository(
-        contact_points=[CASSANDRA_HOST],
-        keyspace=CASSANDRA_KEYSPACE
-    )
+
+def get_cassandra_repository() -> CassandraRepository:
+    return app_container.database_container.cassandra_repository()

@@ -1,1 +1,2 @@
-from .db_dependency import get_db_repository
+from .db_dependency import get_cassandra_repository
+from .service_dependency import get_course_service
