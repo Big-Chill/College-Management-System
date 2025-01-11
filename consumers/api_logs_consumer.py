@@ -3,7 +3,7 @@ from confluent_kafka import Consumer
 from typing import Optional
 import logging
 
-from repositories import RedisRepository, Neo4jRepository, MongoRepository
+from repositories import RedisRepository, Neo4jRepository, MongoRepository, CassandraRepository, SolrRepository
 from .base_consumer import IBaseConsumer
 
 logger = logging.getLogger(__name__)
@@ -15,13 +15,17 @@ class ApiLogsConsumer(IBaseConsumer):
             topic_name: str,
             neo4j_repository: Optional[Neo4jRepository] = None,
             redis_repository: Optional[RedisRepository] = None,
-            mongo_repository: Optional[MongoRepository] = None
+            mongo_repository: Optional[MongoRepository] = None,
+            cassandra_repository: Optional[CassandraRepository] = None,
+            solr_repository: Optional[SolrRepository] = None
         ):
             self.consumer = consumer
             self.topic_name = topic_name
             self.neo4j_repository = neo4j_repository
             self.redis_repository = redis_repository
             self.mongo_repository = mongo_repository
+            self.cassandra_repository = cassandra_repository
+            self.solr_repository = solr_repository
             logger.info('Kafka Initialized')
 
     def consume(self):

@@ -1,9 +1,9 @@
 import threading
 import logging
 from confluent_kafka import Consumer
-from consumers import CourseConsumer, ApiLogsConsumer
-from repositories import Neo4jRepository, RedisRepository, MongoRepository
-from configuration import NEO4J_HOST, NEO4J_USER, NEO4J_PASSWORD, REDIS_HOST, REDIS_PORT, MONGO_DB, MONGO_HOST, KAFKA_HOST
+from consumers import CourseConsumer, ApiLogsConsumer, StudentConsumer
+from repositories import Neo4jRepository, RedisRepository, MongoRepository, CassandraRepository, SolrRepository
+from configuration import NEO4J_HOST, NEO4J_USER, NEO4J_PASSWORD, REDIS_HOST, REDIS_PORT, MONGO_DB, MONGO_HOST, KAFKA_HOST, CASSANDRA_HOST, CASSANDRA_KEYSPACE, SOLR_URL
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,8 +32,17 @@ mongo_config = {
     "db": MONGO_DB,
 }
 
+cassandra_config = {
+    "host": [CASSANDRA_HOST],
+    "keyspace": CASSANDRA_KEYSPACE,
+}
 
-def start_consumer(consumer_class, kafka_config, topic_name, neo4j_repository, redis_repository, mongo_repository):
+solr_config = {
+    "host": SOLR_URL,
+}
+
+
+def start_consumer(consumer_class, kafka_config, topic_name, neo4j_repository, redis_repository, mongo_repository, cassandra_repository, solr_repository):
     """
     Starts a consumer instance and runs its `consume` method in a try-except block.
     """
@@ -43,6 +52,8 @@ def start_consumer(consumer_class, kafka_config, topic_name, neo4j_repository, r
         neo4j_repository=neo4j_repository,
         redis_repository=redis_repository,
         mongo_repository=mongo_repository,
+        cassandra_repository=cassandra_repository,
+        solr_repository=solr_repository
     )
     try:
         logger.info(f"Starting {consumer_class.__name__} for topic: {topic_name}")
@@ -62,6 +73,7 @@ def initialize_consumers():
     consumers = [
         {"class": CourseConsumer, "topic": "course_events"},
         {"class": ApiLogsConsumer, "topic": "api_events"},
+        {"class": StudentConsumer, "topic": "student_events"}
     ]
 
     # Initialize repository instances
@@ -82,6 +94,15 @@ def initialize_consumers():
         mongo_db=mongo_config["db"],
     )
 
+    cassandra_repository = CassandraRepository(
+        contact_points=cassandra_config["host"],
+        keyspace=cassandra_config["keyspace"],
+    )
+
+    solr_repository = SolrRepository(
+        solr_url=solr_config["host"]
+    )
+
     # Start each consumer in a separate thread
     threads = []
     for consumer_info in consumers:
@@ -94,6 +115,8 @@ def initialize_consumers():
                 neo4j_repository,
                 redis_repository,
                 mongo_repository,
+                cassandra_repository,
+                solr_repository
             ),
             daemon=True,
         )
