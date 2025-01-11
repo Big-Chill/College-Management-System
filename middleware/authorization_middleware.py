@@ -5,12 +5,11 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.status import HTTP_401_UNAUTHORIZED
 from utlities import Jwt
 from configuration import INTERNAL_TOKEN
-from dependencies import get_db_repository
-
+from repositories import IDBRepository
 class AuthorizationMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app):
+    def __init__(self, app, db_repository: IDBRepository):
         super().__init__(app)
-        self.db_repository = get_db_repository()
+        self.db_repository = db_repository
 
     async def dispatch(self, request: Request, call_next):
         TOKEN_MSG = "Missing Authorization Token! Unauthorized to access this resource"
