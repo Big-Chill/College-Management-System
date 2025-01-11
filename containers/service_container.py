@@ -1,6 +1,6 @@
 from dependency_injector import containers, providers
 from repositories import CassandraRepository, RedisRepository, KafkaRepository
-from services import CourseService, StudentService
+from services import CourseService, StudentService, UserService
 import configuration
 
 class ServiceContainer(containers.DeclarativeContainer):
@@ -11,3 +11,4 @@ class ServiceContainer(containers.DeclarativeContainer):
     kafka_repository = providers.Singleton(KafkaRepository, bootstrap_servers=config.KAFKA_HOST)
     course_service = providers.Factory(CourseService, db_repository=cassandra_repository, cache_repository=redis_repository, search_repository=cassandra_repository, message_broker_repository=kafka_repository)
     student_service = providers.Factory(StudentService, db_repository=cassandra_repository, cache_repository=redis_repository, search_repository=cassandra_repository)
+    user_service = providers.Factory(UserService, db_repository=cassandra_repository, cache_repository=redis_repository, search_repository=cassandra_repository)

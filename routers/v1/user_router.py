@@ -1,18 +1,12 @@
-from fastapi import FastAPI, HTTPException, Depends, APIRouter, Response, Cookie, Request
+from fastapi import FastAPI, HTTPException, Depends, APIRouter, Request
 from fastapi.responses import JSONResponse
 from services.user_service import UserService
-from configuration import CASSANDRA_KEYSPACE, CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL
-from repositories import CassandraRepository, RedisRepository, SolrRepository
-
-db_repository = CassandraRepository(contact_points=[CASSANDRA_HOST], keyspace=CASSANDRA_KEYSPACE)
-cache_repository = RedisRepository(host=REDIS_HOST, port=REDIS_PORT, db=0)
-search_repository = SolrRepository(solr_url=SOLR_URL)
-user_service = UserService(db_repository=db_repository, cache_repository=cache_repository, search_repository=search_repository)
+from dependencies import get_user_service
 
 user_router = APIRouter()
 
 @user_router.post("/sign_in")
-async def sign_in(user: dict, request: Request):
+async def sign_in(user: dict, request: Request, user_service: UserService = Depends(get_user_service)):
     cookies = request.cookies
     if cookies and "access-token" in cookies:
         raise HTTPException(status_code=400, detail={"error": "User is already logged in", "statusCode": 400})
@@ -32,7 +26,7 @@ async def sign_in(user: dict, request: Request):
     return response
 
 @user_router.post("/sign_out")
-async def sign_out(request: Request):
+async def sign_out(request: Request,user_service: UserService = Depends(get_user_service)):
     user = request.state.user
     token = request.cookies.get("access-token")
     response = user_service.sign_out(token)
