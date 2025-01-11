@@ -3,16 +3,17 @@ from typing import List, Dict, Union
 from pprint import pprint
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from .base_service import IService
-from repositories import IDBRepository, CassandraRepository, RedisRepository, SolrRepository, KafkaRepository
+from repositories import IDBRepository, CassandraRepository, RedisRepository, SolrRepository, IMessageBrokerRepository
 from models import StudentModel, StudentByEmailModel, StudentByRollNoModel, StudentByPhoneNoModel, StudentByCourseModel, StudentByNameModel, UserModel, UserByUserNameModel
 from configuration import CASSANDRA_HOST, REDIS_HOST, REDIS_PORT, SOLR_URL
 
 
 class StudentService(IService):
-    def __init__(self, db_repository: IDBRepository = None, cache_repository: IDBRepository = None, search_repository: IDBRepository = None):
+    def __init__(self, db_repository: IDBRepository = None, cache_repository: IDBRepository = None, search_repository: IDBRepository = None, message_broker_repository: IMessageBrokerRepository= None):
         self.db_repository = db_repository
         self.cache_repository = cache_repository
         self.search_repository = search_repository
+        self.message_broker_repository = message_broker_repository
 
     def auto_generate_roll_no_single(self, data: dict):
         _prefix = f"{str(data['enrollment_year'])[-2:]}{str(data['enrollment_month']).zfill(2)}"
@@ -144,13 +145,28 @@ class StudentService(IService):
 
             # Insert student data into Redis for each key
             for key in redis_keys:
-                redis_repo.insert(table=key, data=student_model.dict())
-
+                message = {
+                    "event": "STUDENT_CREATED",
+                    "data": {
+                        "key": key,
+                        "value": student_model.dict(),
+                        "method": "insert"
+                    }
+                }
+                self.message_broker_repository.publish(topic="student_events", message=message)
             # Cache by course_id using a Redis Set (to avoid overwriting)
-            redis_repo.client.sadd(f"course:{student_model.course_id}", student_model.id)
+            message = {
+                "event": "STUDENT_CREATED",
+                "data": {
+                    "key": f"course:{student_model.course_id}",
+                    "value": student_model.id,
+                    "method": "sadd"
+                }
+            }
+            self.message_broker_repository.publish(topic="student_events", message=message)
+
             # Add student to Solr index
             self.index_student_in_solr(student_model.dict())
-
             # Sign up student in the system
             self.sign_up_student(student_model.dict())
 
@@ -202,9 +218,6 @@ class StudentService(IService):
                 "students_by_name": []  # For name-based lookup
             }
 
-            # Redis operations: batch caching of student data
-            redis_pipeline = redis_repo.client.pipeline()
-
             for student in prepared_students:
                 student_id = student['id']
 
@@ -241,17 +254,34 @@ class StudentService(IService):
                     ).dict()
                 )
 
-                # Redis caching
-                redis_pipeline.hset(student_id, mapping=student)
-                redis_pipeline.hset(student['email'], mapping=student)
-                redis_pipeline.hset(student['roll_no'], mapping=student)
-                redis_pipeline.hset(student['phone_no'], mapping=student)
+                redis_keys = [
+                    student_id,                   # Cache by student_id
+                    student['email'],                # Cache by email
+                    student['phone_no'],            # Cache by phone number
+                    student['roll_no'],             # Cache by roll number
+                ]
 
-                # Redis Set for course_id: Multiple students can share the same course_id
-                redis_pipeline.sadd(f"course:{student['course_id']}", student_id)
+                for key in redis_keys:
+                    message = {
+                        "event": "STUDENT_CREATED",
+                        "data": {
+                            "key": key,
+                            "value": student,
+                            "method": "insert"
+                        }
+                    }
+                    self.message_broker_repository.publish(topic="student_events", message=message)
 
-            # Execute Redis pipeline
-            redis_pipeline.execute()
+                # Cache by course_id using a Redis Set (to avoid overwriting)
+                message = {
+                    "event": "STUDENT_CREATED",
+                    "data": {
+                        "key": f"course:{student['course_id']}",
+                        "value": student_id,
+                        "method": "sadd"
+                    }
+                }
+                self.message_broker_repository.publish(topic="student_events", message=message)
 
             # Batch insert into Cassandra secondary tables
             for table, data in secondary_data.items():
@@ -386,76 +416,3 @@ class StudentService(IService):
             return {"success": "All data cleared", "statusCode": 200}
         except Exception as e:
             return {"error": f"Error clearing data: {str(e)}", "statusCode": 500}
-
-
-
-
-
-
-
-
-if __name__ == "__main__":
-    db_repository = CassandraRepository(contact_points=[CASSANDRA_HOST], keyspace=CASANDRA_KEYSPACE)
-    cache_repository = RedisRepository(host=REDIS_HOST, port=REDIS_PORT, db=0)
-    search_repository = SolrRepository(solr_url=SOLR_URL)
-    student_service = StudentService(db_repository=db_repository, cache_repository=cache_repository, search_repository=search_repository)
-
-    test_data = {
-        "name": "Rohit Nandy",
-        "roll_no": "A123",
-        "course": "Computer Science",
-        "course_id": "CS101",
-        "enrollment_day": 1,
-        "enrollment_month": 1,
-        "enrollment_year": 2021,
-        "dob_day": 15,
-        "dob_month": 3,
-        "dob_year": 2001,
-        "email": "rohitnandy39@gmail.com",
-        "phone_no": "8334951178",
-        "enrollment_type": "Full-Time"
-    }
-    # # pprint(student_service.create_student(test_data), indent=4)
-
-
-    # mock_data = [
-    #     {
-    #     "name": "Abhishek Patel",
-    #     "roll_no": "A124",
-    #     "course": "Computer Science",
-    #     "course_id": "CS101",
-    #     "enrollment_day": 1,
-    #     "enrollment_month": 1,
-    #     "enrollment_year": 2021,
-    #     "dob_day": 15,
-    #     "dob_month": 3,
-    #     "dob_year": 2001,
-    #     "email": "abhipatel@gmail.com",
-    #     "phone_no": "9865346789",
-    #     "enrollment_type": "Full-Time"
-    # },
-    # {
-    #     "name": "Rohan Sharma",
-    #     "roll_no": "A125",
-    #     "course": "Computer Science",
-    #     "course_id": "CS101",
-    #     "enrollment_day": 1,
-    #     "enrollment_month": 2,
-    #     "enrollment_year": 2021,
-    #     "dob_day": 15,
-    #     "dob_month": 3,
-    #     "dob_year": 2001,
-    #     "email": "rohan@gmail.com",
-    #     "phone_no": "9876543210",
-    #     "enrollment_type": "Full-Time"
-    # }
-    # ]
-    # # pprint(student_service.bulk_add_students(mock_data), indent=4)
-    # # course = "CS101"
-    # # pprint(student_service.get_student_by_course(course), indent=4)
-
-
-    # search_name = "Sharma"
-    # pprint(student_service.search_by_name(search_name), indent=4)
-
-    pprint(student_service.clear_all_data(), indent=4)

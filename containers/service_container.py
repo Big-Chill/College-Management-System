@@ -10,5 +10,5 @@ class ServiceContainer(containers.DeclarativeContainer):
     redis_repository = providers.Singleton(RedisRepository, host=config.REDIS_HOST, port=config.REDIS_PORT, db=0)
     kafka_repository = providers.Singleton(KafkaRepository, bootstrap_servers=config.KAFKA_HOST)
     course_service = providers.Factory(CourseService, db_repository=cassandra_repository, cache_repository=redis_repository, search_repository=cassandra_repository, message_broker_repository=kafka_repository)
-    student_service = providers.Factory(StudentService, db_repository=cassandra_repository, cache_repository=redis_repository, search_repository=cassandra_repository)
+    student_service = providers.Factory(StudentService, db_repository=cassandra_repository, cache_repository=redis_repository, search_repository=cassandra_repository, message_broker_repository=kafka_repository)
     user_service = providers.Factory(UserService, db_repository=cassandra_repository, cache_repository=redis_repository, search_repository=cassandra_repository)

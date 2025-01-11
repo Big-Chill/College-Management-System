@@ -1,7 +1,7 @@
 import threading
 import logging
 from confluent_kafka import Consumer
-from consumers import CourseConsumer, ApiLogsConsumer
+from consumers import CourseConsumer, ApiLogsConsumer, StudentConsumer
 from repositories import Neo4jRepository, RedisRepository, MongoRepository
 from configuration import NEO4J_HOST, NEO4J_USER, NEO4J_PASSWORD, REDIS_HOST, REDIS_PORT, MONGO_DB, MONGO_HOST, KAFKA_HOST
 
@@ -62,6 +62,7 @@ def initialize_consumers():
     consumers = [
         {"class": CourseConsumer, "topic": "course_events"},
         {"class": ApiLogsConsumer, "topic": "api_events"},
+        {"class": StudentConsumer, "topic": "student_events"}
     ]
 
     # Initialize repository instances
