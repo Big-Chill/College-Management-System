@@ -51,11 +51,23 @@ class CourseConsumer(IBaseConsumer):
 
                 if message_data.get("event") == "COURSE_CREATED":
                     self.insert_into_cache(message_data["data"])
+                elif message_data.get("event") == "COURSE_LOOKUP_CREATED":
+                    self.insert_lookup_data(message_data["data"])
 
         except Exception as e:
             print(f"Error consuming message: {str(e)}")
         finally:
             self.close()
+
+    def insert_lookup_data(self, event_data):
+        try:
+            table = event_data.get("table")
+            data = event_data.get("data")
+            self.cassandra_repository.insert(table=table, data=data)
+        except Exception as e:
+            print(f"Error inserting lookup data into cache: {str(e)}")
+        finally:
+            return
 
     def insert_into_cache(self, course_data):
         try:
