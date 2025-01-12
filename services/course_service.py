@@ -41,7 +41,15 @@ class CourseService(IService):
             ]
 
             for record in secondary_records:
-                self.db_repository.insert(table=record["table"], data=record["data"])
+                # self.db_repository.insert(table=record["table"], data=record["data"])
+                message = {
+                    "event": "COURSE_LOOKUP_CREATED",
+                    "data": {
+                        "table": record["table"],
+                        "data": record["data"]
+                    }
+                }
+                self.message_broker_repository.publish(topic="course_events", message=message)
             message = {
                 "event": "COURSE_CREATED",
                 "data": course_model.dict()
@@ -98,7 +106,15 @@ class CourseService(IService):
 
 
             for table, data in secondary_data.items():
-                self.db_repository.bulk_insert(table=table, data=data)
+                for record in data:
+                    message = {
+                        "event": "COURSE_LOOKUP_CREATED",
+                        "data": {
+                            "table": table,
+                            "data": record
+                        }
+                    }
+                    self.message_broker_repository.publish(topic="course_events", message=message)
         except Exception as e:
             return {"error": f"Error inserting courses: {str(e)}", "statusCode": 500}
 
