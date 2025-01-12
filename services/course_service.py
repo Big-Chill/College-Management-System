@@ -41,7 +41,6 @@ class CourseService(IService):
             ]
 
             for record in secondary_records:
-                # self.db_repository.insert(table=record["table"], data=record["data"])
                 message = {
                     "event": "COURSE_LOOKUP_CREATED",
                     "data": {
@@ -92,7 +91,6 @@ class CourseService(IService):
                 "courses_by_name": [],
                 "courses_by_credits": []
             }
-            # redis_pipeline = redis_repo.client.pipeline()
             for course in prepare_courses:
                 course_id = course["id"]
                 secondary_data["courses_duration_lookup"].append(CourseDurationLookupModel(course_duration=course["course_duration"], course_duration_unit=course["course_duration_unit"], course_id=course_id).dict())
