@@ -27,6 +27,12 @@ class CassandraRepository(IDBRepository):
         rows = self.session.execute(query)
         return self._convert_row_to_dict(rows)
 
+    def update(self, table: str, data: dict, conditions: str):
+        print(f'UPDATE {table} SET {data} WHERE {conditions}')
+        set_values = ', '.join([f"{key}='{value}'" if isinstance(value, str) else f"{key}={value}" for key, value in data.items()])
+        query = f"UPDATE {table} SET {set_values} WHERE {conditions}"
+        self.session.execute(query)
+
     def remove_all_data(self):
         query = f"SELECT table_name FROM system_schema.tables WHERE keyspace_name='{self.keyspace}'"
         rows = self.session.execute(query)
