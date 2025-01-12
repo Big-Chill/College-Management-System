@@ -1,6 +1,5 @@
 import os, sys
 from typing import List
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from .base_service import IService
 from repositories import IDBRepository, IMessageBrokerRepository
 from models import CourseModel, CourseDurationLookupModel, CourseByName, CourseByCredits

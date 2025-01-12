@@ -1,10 +1,8 @@
 import os, sys, re
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from .base_service import IService
 from repositories import IDBRepository
 from models import SessionModel
 from utlities import Jwt
-from datetime import date
 
 class UserService(IService):
     def __init__(self, db_repository: IDBRepository = None, cache_repository: IDBRepository = None, search_repository: IDBRepository = None):
