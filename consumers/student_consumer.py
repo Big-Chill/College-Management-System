@@ -56,11 +56,22 @@ class StudentConsumer(IBaseConsumer):
                     self.sign_up_student(message_data["data"])
                 elif message_data.get("event") == "STUDENT_INDEXED":
                     self.insert_into_solr(message_data["data"])
+                elif message_data.get("event") == "STUDENT_LOOKUP_CREATED":
+                    self.insert_lookup_data(message_data["data"])
+
 
         except Exception as e:
             print(f"Error consuming message: {str(e)}")
         finally:
             self.close()
+
+    def insert_lookup_data(self, event_data):
+        try:
+            table = event_data.get("table")
+            data = event_data.get("data")
+            self.cassandra_repository.insert(table=table, data=data)
+        except Exception as e:
+            print(f"Error inserting lookup data: {str(e)}")
 
     def insert_into_solr(self, event_data):
         try:

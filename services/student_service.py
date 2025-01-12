@@ -122,7 +122,14 @@ class StudentService(IService):
             ]
 
             for record in secondary_records:
-                self.db_repository.insert(table=record["table"], data=record["data"])
+                message = {
+                    "event": "STUDENT_LOOKUP_CREATED",
+                    "data": {
+                        "table": record["table"],
+                        "data": record["data"]
+                    }
+                }
+                self.message_broker_repository.publish(topic="student_events", message=message)
 
             # Cache the student data in Redis under different keys
             redis_keys = [
@@ -274,8 +281,15 @@ class StudentService(IService):
 
             # Batch insert into Cassandra secondary tables
             for table, data in secondary_data.items():
-                self.db_repository.bulk_insert(table=table, data=data)
-
+                for record in data:
+                    message = {
+                        "event": "STUDENT_LOOKUP_CREATED",
+                        "data": {
+                            "table": table,
+                            "data": record
+                        }
+                    }
+                    self.message_broker_repository.publish(topic="student_events", message=message)
             # Batch index students in Solr
             for student in prepared_students:
                 self.index_student_in_solr(student)
