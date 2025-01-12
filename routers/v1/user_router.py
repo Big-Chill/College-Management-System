@@ -43,3 +43,41 @@ async def sign_out(request: Request,user_service: UserService = Depends(get_user
     response.status_code = status_code
     return response
 
+@user_router.get("/get_user_details/{user_id}")
+async def get_user_details(user_id: str, user_service: UserService = Depends(get_user_service)):
+    response = user_service.get_user_details(user_id)
+    status_code = response.get("statusCode", 200)
+    if "error" in response:
+        raise HTTPException(status_code=status_code, detail={"error": response.get("error"), "statusCode": status_code})
+
+    content = {
+        "data": response.get("success"),
+        "statusCode": status_code
+    }
+    return content
+
+@user_router.get("/get_user_details_by_username/{username}")
+async def get_user_details_by_username(username: str, user_service: UserService = Depends(get_user_service)):
+    response = user_service.get_user_details_by_username(username)
+    status_code = response.get("statusCode", 200)
+    if "error" in response:
+        raise HTTPException(status_code=status_code, detail={"error": response.get("error"), "statusCode": status_code})
+
+    content = {
+        "data": response.get("success"),
+        "statusCode": status_code
+    }
+    return content
+
+@user_router.post("/update_password")
+async def update_password(payload: dict, user_service: UserService = Depends(get_user_service)):
+    response = user_service.update_password(payload)
+    status_code = response.get("statusCode", 200)
+    if "error" in response:
+        raise HTTPException(status_code=status_code, detail={"error": response.get("error"), "statusCode": status_code})
+
+    content = {
+        "message": "Password updated successfully",
+        "statusCode": status_code
+    }
+    return content

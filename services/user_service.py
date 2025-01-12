@@ -68,5 +68,68 @@ class UserService(IService):
         except Exception as e:
             return {"error": str(e), "statusCode": 400}
 
+    def get_user_details(self, user_id):
+        try:
+            user = self.db_repository.select(table='users', conditions=f"id='{user_id}'")
+            if not user:
+                return {"error": "User not found", "statusCode": 404}
+            user = user[0]
+            reference_id = user.get('reference_id')
+            if 'student' in reference_id:
+                student = self.db_repository.select(table='students', conditions=f"id='{reference_id}'")
+                if not student:
+                    return {"error": "Student not found", "statusCode": 404}
+                respone_payload = {
+                    **user,
+                    **student[0]
+                }
+                return {"success": respone_payload, "statusCode": 200}
+            return {"success": user[0], "statusCode": 200}
+        except Exception as e:
+            return {"error": str(e), "statusCode": 400}
+
+    def get_user_details_by_username(self, username):
+        try:
+            user = self.db_repository.select(table='users_by_username', conditions=f"user_name='{username}'")
+            if not user:
+                return {"error": "User not found", "statusCode": 404}
+            user = user[0]
+            reference_id = user.get('reference_id')
+
+            if 'student' in reference_id:
+                student = self.db_repository.select(table='students', conditions=f"id='{reference_id}'")
+                if not student:
+                    return {"error": "Student not found", "statusCode": 404}
+                respone_payload = {
+                    **user,
+                    **student[0]
+                }
+                return {"success": respone_payload, "statusCode": 200}
+            return {"success": user[0], "statusCode": 200}
+        except Exception as e:
+            return {"error": str(e), "statusCode": 400}
+
+    def update_password(self, payload: dict):
+        try:
+            username = payload.get('username')
+            old_password = payload.get('old_password')
+            new_password = payload.get('new_password')
+
+            user = self.db_repository.select(table='users_by_username', conditions=f"user_name='{username}'")
+            if not user:
+                return {"error": "User not found", "statusCode": 404}
+            user = user[0]
+
+            if user.get('password') != old_password:
+                return {"error": "Old password is incorrect", "statusCode": 400}
+
+            user_id = user.get('user_id')
+
+            self.db_repository.update(table='users_by_username', data={"password": new_password}, conditions=f"user_name='{username}' and user_id='{user['user_id']}' and reference_id='{user['reference_id']}'")
+            self.db_repository.update(table='users', data={"password": new_password}, conditions=f"id='{user_id}' and reference_id='{user['reference_id']}' and user_name='{username}'")
+            return {"message": "Password updated successfully", "statusCode": 200}
+        except Exception as e:
+            return {"error": str(e), "statusCode": 400}
+
 
 
